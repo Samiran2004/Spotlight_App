@@ -1,11 +1,55 @@
 import { Image } from 'expo-image';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Text, TouchableOpacity, View } from 'react-native';
 import { styles } from '../styles/feed.styles';
 import { Link } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
+import { useState } from 'react';
+import { userAuthStore } from '../store/authStore';
 
 export default function Post({ post }) {
+
+  const [isLiked, setIsLiked] = useState(post.isLiked);
+
+  const { token, user } = userAuthStore();
+
+  const handleLike = async () => {
+    try {
+      // console.log("Like function called for user: .", token);
+
+      const response = await fetch("http://192.168.1.7:8000/api/post/like", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          postId: post._id
+        })
+      });
+
+      const text = await response.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error("Server did not return JSON: " + text);
+      }
+
+      console.log(data);
+
+      if (!response.ok) {
+        throw new Error(data.message || "Something Went Wrong");
+      }
+
+      setIsLiked(data.isLiked);
+    } catch (error) {
+      console.log("Error in like: ", error.message);
+      Alert.alert("Error: ", "Error in like.");
+    }
+  }
+
   return (
     <View style={styles.post}>
       {/* Post Header  */}
@@ -40,8 +84,8 @@ export default function Post({ post }) {
       {/* Post Actions */}
       <View style={styles.postActions}>
         <View style={styles.postActionsLeft}>
-          <TouchableOpacity>
-            <Ionicons name='heart-outline' size={30} color={COLORS.white} />
+          <TouchableOpacity onPress={handleLike}>
+            <Ionicons name={isLiked ? "heart" : "heart-outline"} size={30} color={isLiked ? COLORS.primary : COLORS.white} />
           </TouchableOpacity>
           <TouchableOpacity>
             <Ionicons name='chatbubble-outline' size={30} color={COLORS.white} />

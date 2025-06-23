@@ -5,6 +5,7 @@ import Post from '../../models/posts.models.js';
 import User from '../../models/users.models.js';
 import Like from '../../models/likes.models.js';
 import Bookmark from '../../models/bookmarks.models.js';
+import Notification from '../../models/notifications.models.js';
 
 const router = express.Router();
 
@@ -62,7 +63,7 @@ router.get('/get-all', userAuth, async (req, res) => {
 
                 const isLiked = likes.some(like => like.userId.toString() === req.user._id.toString());
 
-                const bookmarks = await Bookmark.find({postId: post._id});
+                const bookmarks = await Bookmark.find({ postId: post._id });
 
                 const isBookMarked = bookmarks.some(bookmark => bookmark.userId.toString() === req.user._id.toString());
 
@@ -80,6 +81,70 @@ router.get('/get-all', userAuth, async (req, res) => {
             data: postData
         });
     } catch (error) {
+        return res.status(500).json({
+            status: 'Failed',
+            message: "Internal Server Error"
+        });
+    }
+});
+
+router.post('/like', userAuth, async (req, res) => {
+    try {
+        const { postId } = req.body;
+
+        if (!postId) {
+            return res.status(400).json({
+                status: 'Failed',
+                message: "Please provide postId!"
+            });
+        }
+
+        // Check if post exists
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({
+                status: 'Failed',
+                message: "Post not found!"
+            });
+        }
+
+        // Check if already liked
+        const existingLike = await Like.findOne({ postId, userId: req.user._id });
+
+        if (existingLike) {
+            await Like.findOneAndDelete({ postId, userId: req.user._id });
+            await Post.findByIdAndUpdate(postId, { $inc: { likes: -1 } });
+
+            return res.status(200).json({
+                status: 'Ok',
+                message: "Unliked the post",
+                isLiked: false
+            });
+        }
+
+        // Add new like
+        const newLike = new Like({ postId, userId: req.user._id });
+        await newLike.save();
+        await Post.findByIdAndUpdate(postId, { $inc: { likes: 1 } });
+
+        // Add notification if not liking own post
+        if (post.userId.toString() !== req.user._id.toString()) {
+            const newNotification = new Notification({
+                receiverId: post.userId,
+                senderId: req.user._id,
+                typeOfNotification: "like"
+            });
+            await newNotification.save();
+        }
+
+        return res.status(200).json({
+            status: 'Ok',
+            message: "Liked the post",
+            isLiked: true
+        });
+
+    } catch (error) {
+        console.error(error);
         return res.status(500).json({
             status: 'Failed',
             message: "Internal Server Error"
