@@ -1,9 +1,48 @@
-import { Alert, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { userAuthStore } from '../../store/authStore';
+import { styles } from '../../styles/feed.styles';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../../constants/theme';
+import { useEffect, useState } from 'react';
+import Loader from '../../components/Loader';
+import Post from '../../components/Post';
 
 export default function Index() {
 
-  const { logOut } = userAuthStore();
+  const { logOut, token } = userAuthStore();
+
+  const [posts, setPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    async function fetchPosts() {
+      try {
+        setIsLoading(true);
+        const response = await fetch("http://192.168.1.7:8000/api/post/get-all", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+        });
+        const text = await response.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (error) {
+          console.error("Invalid JSON response:", text);
+          throw new Error("Server did not return valid JSON.");
+        }
+        console.log(data.data)
+        setPosts(data.data);
+        setIsLoading(false);
+      } catch (error) {
+        console.log("Error: ", error.message);
+        setIsLoading(false);
+      }
+    }
+    fetchPosts();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -13,12 +52,42 @@ export default function Index() {
     }
   }
 
+  if (isLoading) {
+    return <Loader />
+  }
+
+  if (posts.length === 0) {
+    return (
+      <View style={{ backgroundColor: "black", flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: COLORS.primary, fontSize: 20 }}>No Post Found</Text>
+        <Ionicons name='information-circle-outline' size={30} color="red" />
+      </View>
+    )
+  }
+
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Hello </Text>
-      <TouchableOpacity onPress={handleLogout}>
-        <Text>Logout</Text>
-      </TouchableOpacity>
+    <View style={styles.container}>
+
+      {/* Header  */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>SpotLight</Text>
+        <TouchableOpacity onPress={handleLogout}>
+          <Ionicons name='log-out-outline' size={24} color={COLORS.white} />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        // horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 80 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {
+          posts.map((post) => (
+            <Post key={post._id} post={post} />
+          ))
+        }
+      </ScrollView>
     </View>
   );
 }
