@@ -1,4 +1,4 @@
-import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { userAuthStore } from '../../store/authStore';
 import { styles } from '../../styles/feed.styles';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,7 +33,7 @@ export default function Index() {
           console.error("Invalid JSON response:", text);
           throw new Error("Server did not return valid JSON.");
         }
-        console.log(data.data)
+        // console.log(data.data)
         setPosts(data.data);
         setIsLoading(false);
       } catch (error) {
@@ -76,7 +76,7 @@ export default function Index() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
+      {/* <ScrollView
         // horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 80 }}
@@ -87,7 +87,15 @@ export default function Index() {
             <Post key={post._id} post={post} />
           ))
         }
-      </ScrollView>
+      </ScrollView> */}
+
+      <FlatList
+        data={posts}
+        renderItem={({ item }) => <Post post={item} />}
+        contentContainerStyle={{ paddingBottom: 60 }}
+        keyExtractor={(item)=>item._id}
+        showsVerticalScrollIndicator={false}
+      />
     </View>
   );
 }

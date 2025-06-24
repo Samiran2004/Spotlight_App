@@ -10,6 +10,8 @@ import { userAuthStore } from '../store/authStore';
 export default function Post({ post }) {
 
   const [isLiked, setIsLiked] = useState(post.isLiked);
+  const [totalLikes, setTotalLikes] = useState(post.likes);
+  // console.log(totalLikes);
 
   const { token, user } = userAuthStore();
 
@@ -37,18 +39,21 @@ export default function Post({ post }) {
         throw new Error("Server did not return JSON: " + text);
       }
 
-      console.log(data);
+      // console.log(data);
 
       if (!response.ok) {
         throw new Error(data.message || "Something Went Wrong");
       }
 
       setIsLiked(data.isLiked);
+      setTotalLikes(prev => data.isLiked ? prev + 1 : prev - 1);
     } catch (error) {
       console.log("Error in like: ", error.message);
       Alert.alert("Error: ", "Error in like.");
     }
   }
+
+  // console.log(post.likes);
 
   return (
     <View style={styles.post}>
@@ -100,7 +105,7 @@ export default function Post({ post }) {
 
       {/* Post Info */}
       <View style={styles.postInfo}>
-        <Text style={styles.likesText}>Be the first to like</Text>
+        <Text style={styles.likesText}>{totalLikes > 0 ? `${totalLikes.toString()} likes` : "Be the first to like"}</Text>
         {
           post.caption && (
             <View style={styles.captionContainer}>

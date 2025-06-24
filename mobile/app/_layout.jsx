@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { userAuthStore } from '../store/authStore';
 
 export default function RootLayout() {
+
   const segment = useSegments();
   const router = useRouter();
 

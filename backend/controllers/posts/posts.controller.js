@@ -118,7 +118,8 @@ router.post('/like', userAuth, async (req, res) => {
             return res.status(200).json({
                 status: 'Ok',
                 message: "Unliked the post",
-                isLiked: false
+                isLiked: false,
+                likes: post.likes
             });
         }
 
@@ -135,12 +136,14 @@ router.post('/like', userAuth, async (req, res) => {
                 typeOfNotification: "like"
             });
             await newNotification.save();
+            // console.log(newNotification)
         }
 
         return res.status(200).json({
             status: 'Ok',
             message: "Liked the post",
-            isLiked: true
+            isLiked: true,
+            likes: post.likes
         });
 
     } catch (error) {
