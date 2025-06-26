@@ -156,6 +156,21 @@ router.post('/like', userAuth, async (req, res) => {
     }
 });
 
+router.get('/comment', userAuth, async (req, res) => {
+    try {
+        const comments = await Comment.find();
+        return res.status(200).json({
+            status: 'Ok',
+            data: comments
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: 'Failed',
+            message: "Internal Server Error."
+        });
+    }
+});
+
 router.post('/comment', userAuth, async (req, res) => {
     try {
         const { postId, content } = req.body;
