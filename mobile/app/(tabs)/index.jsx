@@ -33,8 +33,9 @@ export default function Index() {
           console.error("Invalid JSON response:", text);
           throw new Error("Server did not return valid JSON.");
         }
-        // console.log(data.data)
-        setPosts(data.data);
+        // console.log("Fetched post data:", data);
+
+        setPosts(Array.isArray(data.data) ? data.data : []);
         setIsLoading(false);
       } catch (error) {
         console.log("Error: ", error.message);
@@ -93,7 +94,7 @@ export default function Index() {
         data={posts}
         renderItem={({ item }) => <Post post={item} />}
         contentContainerStyle={{ paddingBottom: 60 }}
-        keyExtractor={(item)=>item._id}
+        keyExtractor={(item) => item._id}
         showsVerticalScrollIndicator={false}
       />
     </View>

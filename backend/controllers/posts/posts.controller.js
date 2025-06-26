@@ -6,6 +6,7 @@ import User from '../../models/users.models.js';
 import Like from '../../models/likes.models.js';
 import Bookmark from '../../models/bookmarks.models.js';
 import Notification from '../../models/notifications.models.js';
+import Comment from '../../models/comments.models.js';
 
 const router = express.Router();
 
@@ -144,6 +145,64 @@ router.post('/like', userAuth, async (req, res) => {
             message: "Liked the post",
             isLiked: true,
             likes: post.likes
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            status: 'Failed',
+            message: "Internal Server Error"
+        });
+    }
+});
+
+router.post('/comment', userAuth, async (req, res) => {
+    try {
+        const { postId, content } = req.body;
+
+        if (!postId || !content) {
+            return res.status(400).json({
+                status: 'Failed',
+                message: "Please provide all required fields."
+            });
+        }
+
+        // Increment comment count and get post in one call
+        const post = await Post.findByIdAndUpdate(
+            postId,
+            { $inc: { comments: 1 } },
+            { new: true, lean: true }
+        );
+
+        if (!post) {
+            return res.status(404).json({
+                status: 'Failed',
+                message: "Post not found."
+            });
+        }
+
+        // Save new comment
+        const newComment = new Comment({
+            userId: req.user._id,
+            postId,
+            content
+        });
+        await newComment.save();
+
+        // Notify if commenter is not the post author
+        if (post.userId.toString() !== req.user._id.toString()) {
+            const newNotification = new Notification({
+                receiverId: post.userId,
+                senderId: req.user._id,
+                typeOfNotification: "comment"
+            });
+            await newNotification.save();
+        }
+
+        return res.status(201).json({
+            status: 'Ok',
+            message: 'Comment added successfully',
+            comment: newComment
         });
 
     } catch (error) {
