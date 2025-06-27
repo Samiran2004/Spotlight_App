@@ -5,6 +5,12 @@ dotenv.config();
 
 const userAuth = async (req, res, next) => {
     try {
+        if (!req.header) {
+            return res.status(400).json({
+                status: 'Failed',
+                message: "No header found."
+            });
+        }
         const authHeader = req.header("Authorization");
 
         if (!authHeader && !authHeader.startsWith("Bearer ")) {
