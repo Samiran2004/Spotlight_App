@@ -156,9 +156,29 @@ router.post('/like', userAuth, async (req, res) => {
     }
 });
 
-router.get('/comment', userAuth, async (req, res) => {
+router.get('/comment', async (req, res) => {
+    console.log("Hit get comments route.");
     try {
-        const comments = await Comment.find();
+        const { postId } = req.body;
+        if (!postId) {
+            return res.status(400).json({
+                status: 'Failed',
+                message: "All fields are required."
+            });
+        }
+
+        const isPostExist = await Post.findById(postId);
+        if (!isPostExist) {
+            return res.status(400).json({
+                status: 400,
+                message: "No post found."
+            });
+        }
+        const comments = await Comment.find({ postId: postId }).populate({
+            path: "userId",
+            select: "-password"
+        });
+        // console.log({ comments });
         return res.status(200).json({
             status: 'Ok',
             data: comments
@@ -172,6 +192,7 @@ router.get('/comment', userAuth, async (req, res) => {
 });
 
 router.post('/comment', userAuth, async (req, res) => {
+    console.log("Hit post comment route.");
     try {
         const { postId, content } = req.body;
 
