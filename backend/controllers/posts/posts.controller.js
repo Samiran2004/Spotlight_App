@@ -159,7 +159,7 @@ router.post('/like', userAuth, async (req, res) => {
 router.get('/comment', async (req, res) => {
     console.log("Hit get comments route.");
     try {
-        const { postId } = req.body;
+        const { postId } = req.query;
         if (!postId) {
             return res.status(400).json({
                 status: 'Failed',

@@ -6,12 +6,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 import { useState } from 'react';
 import { userAuthStore } from '../store/authStore';
+import CommentsModal from './CommentsModal';
 
 export default function Post({ post }) {
 
   const [isLiked, setIsLiked] = useState(post.isLiked);
   const [totalLikes, setTotalLikes] = useState(post.likes);
+  const [totalComments, setTotalComments] = useState(post.comments || 0);
+  const [showComments, setShowComments] = useState(false);
   // console.log(totalLikes);
+  console.log(totalComments);
 
   const { token, user } = userAuthStore();
 
@@ -39,7 +43,7 @@ export default function Post({ post }) {
         throw new Error("Server did not return JSON: " + text);
       }
 
-      // console.log(data);
+      console.log(data);
 
       if (!response.ok) {
         throw new Error(data.message || "Something Went Wrong");
@@ -92,7 +96,7 @@ export default function Post({ post }) {
           <TouchableOpacity onPress={handleLike}>
             <Ionicons name={isLiked ? "heart" : "heart-outline"} size={30} color={isLiked ? COLORS.primary : COLORS.white} />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowComments(true)}>
             <Ionicons name='chatbubble-outline' size={30} color={COLORS.white} />
           </TouchableOpacity>
         </View>
@@ -115,12 +119,23 @@ export default function Post({ post }) {
           )
         }
 
-        <TouchableOpacity>
-          <Text style={styles.commentText}>View all 2 comments</Text>
+        <TouchableOpacity onPress={() => setShowComments(true)}>
+          <Text style={styles.commentText}>
+            {totalComments > 0
+              ? `View all ${totalComments} comments`
+              : "No comments yet"}
+          </Text>
         </TouchableOpacity>
 
         <Text style={styles.timeAgo}>2 hours ago</Text>
       </View>
+
+      <CommentsModal
+        postId={post._id}
+        visible={showComments}
+        onClose={() => setShowComments(false)}
+        onCommentAdded={() => setTotalComments((prev) => prev + 1)}
+      />
 
     </View>
   );
