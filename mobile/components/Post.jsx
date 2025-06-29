@@ -14,8 +14,9 @@ export default function Post({ post }) {
   const [totalLikes, setTotalLikes] = useState(post.likes);
   const [totalComments, setTotalComments] = useState(post.comments || 0);
   const [showComments, setShowComments] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(post.isBookMarked || false);
   // console.log(totalLikes);
-  console.log(totalComments);
+  // console.log(totalComments);
 
   const { token, user } = userAuthStore();
 
@@ -43,7 +44,7 @@ export default function Post({ post }) {
         throw new Error("Server did not return JSON: " + text);
       }
 
-      console.log(data);
+      // console.log(data);
 
       if (!response.ok) {
         throw new Error(data.message || "Something Went Wrong");
@@ -54,6 +55,43 @@ export default function Post({ post }) {
     } catch (error) {
       console.log("Error in like: ", error.message);
       Alert.alert("Error: ", "Error in like.");
+    }
+  }
+
+  const handleBookMark = async () => {
+    try {
+
+      const response = await fetch("http://192.168.1.7:8000/api/post/toggle-bookmark", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          postId: post._id
+        })
+      })
+
+      const text = await response.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error("Server did not return JSON: " + text);
+      }
+
+      if (!response.ok) {
+        throw new Error(data.message || "Something Went Wrong");
+      }
+
+      // console.log(data.isBookmarked);
+
+      setIsBookmarked(data.isBookmarked);
+
+    } catch (error) {
+      console.log("Error in bookmark: ", error.message);
+      Alert.alert("Error: ", "Error in bookmark.");
     }
   }
 
@@ -101,8 +139,14 @@ export default function Post({ post }) {
           </TouchableOpacity>
         </View>
         <View>
-          <TouchableOpacity>
-            <Ionicons name='bookmark-outline' size={30} color={COLORS.white} />
+          <TouchableOpacity onPress={handleBookMark}>
+            {
+              isBookmarked ? (
+                <Ionicons name='bookmark' size={30} color={COLORS.primary} />
+              ) : (
+                <Ionicons name='bookmark-outline' size={30} color={COLORS.white} />
+              )
+            }
           </TouchableOpacity>
         </View>
       </View>

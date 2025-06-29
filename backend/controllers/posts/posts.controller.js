@@ -250,4 +250,82 @@ router.post('/comment', userAuth, async (req, res) => {
     }
 });
 
+router.post('/toggle-bookmark', userAuth, async (req, res) => {
+    try {
+        const { postId } = req.body;
+
+        if (!postId) {
+            return res.status(400).json({
+                status: 'Failed',
+                message: "PostId is required."
+            });
+        }
+
+        // Check if post exists
+        const isPost = await Post.findById(postId);
+        if (!isPost) {
+            return res.status(400).json({
+                status: 'Failed',
+                message: "Post not found, please provide a valid postId."
+            });
+        }
+
+        // Check if bookmark already exists
+        const existingBookmark = await Bookmark.findOne({
+            postId: postId,
+            userId: req.user._id
+        });
+
+        if (existingBookmark) {
+            // Bookmark exists -> remove it
+            await Bookmark.findByIdAndDelete(existingBookmark._id);
+            return res.status(200).json({
+                status: 'Ok',
+                message: 'Bookmark removed.',
+                isBookmarked: false
+            });
+        } else {
+            // Bookmark does not exist -> create it
+            const newBookmark = new Bookmark({
+                postId: postId,
+                userId: req.user._id
+            });
+            await newBookmark.save();
+            return res.status(200).json({
+                status: 'Ok',
+                message: 'Bookmark added.',
+                isBookmarked: true
+            });
+        }
+
+    } catch (error) {
+        console.error('Error toggling bookmark:', error);
+        return res.status(500).json({
+            status: 'Failed',
+            message: "Internal Server Error"
+        });
+    }
+});
+
+router.get('/get-bookmarks', userAuth, async (req, res) => {
+    try {
+        const bookMarks = await Bookmark.find({ userId: req.user._id }).populate({ path: "postId" });
+        if (!bookMarks) {
+            return res.status(400).json({
+                status: 'Failed',
+                message: "No Bookmarks Found"
+            })
+        }
+        return res.status(200).json({
+            status: 'Ok',
+            data: bookMarks
+        })
+    } catch (error) {
+        return res.status(500).json({
+            status: 'Failed',
+            message: "Internal Server Error."
+        })
+    }
+});
+
 export default router;
