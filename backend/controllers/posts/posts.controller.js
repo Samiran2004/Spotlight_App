@@ -309,7 +309,15 @@ router.post('/toggle-bookmark', userAuth, async (req, res) => {
 
 router.get('/get-bookmarks', userAuth, async (req, res) => {
     try {
-        const bookMarks = await Bookmark.find({ userId: req.user._id }).populate({ path: "postId" });
+        const bookMarks = await Bookmark.find({ userId: req.user._id })
+            .populate({
+                path: "postId",
+                populate: {
+                    path: "userId",
+                    select: "-password"
+                }
+            });
+
         if (!bookMarks) {
             return res.status(400).json({
                 status: 'Failed',
