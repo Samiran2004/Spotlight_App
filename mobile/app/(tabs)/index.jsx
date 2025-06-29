@@ -14,34 +14,35 @@ export default function Index() {
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    async function fetchPosts() {
+  const fetchPosts = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("http://192.168.1.7:8000/api/post/get-all", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+      });
+      const text = await response.text();
+      let data;
       try {
-        setIsLoading(true);
-        const response = await fetch("http://192.168.1.7:8000/api/post/get-all", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-        });
-        const text = await response.text();
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch (error) {
-          console.error("Invalid JSON response:", text);
-          throw new Error("Server did not return valid JSON.");
-        }
-        // console.log("Fetched post data:", data);
-
-        setPosts(Array.isArray(data.data) ? data.data : []);
-        setIsLoading(false);
+        data = JSON.parse(text);
       } catch (error) {
-        console.log("Error: ", error.message);
-        setIsLoading(false);
+        console.error("Invalid JSON response:", text);
+        throw new Error("Server did not return valid JSON.");
       }
+      // console.log("Fetched post data:", data);
+
+      setPosts(Array.isArray(data.data) ? data.data : []);
+      setIsLoading(false);
+    } catch (error) {
+      console.log("Error: ", error.message);
+      setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchPosts();
   }, []);
 
@@ -96,6 +97,8 @@ export default function Index() {
         contentContainerStyle={{ paddingBottom: 60 }}
         keyExtractor={(item) => item._id}
         showsVerticalScrollIndicator={false}
+        refreshing={isLoading}
+        onRefresh={fetchPosts}
       />
     </View>
   );

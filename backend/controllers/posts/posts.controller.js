@@ -328,4 +328,42 @@ router.get('/get-bookmarks', userAuth, async (req, res) => {
     }
 });
 
+router.delete('/delete', userAuth, async (req, res) => {
+    try {
+        const { postId } = req.body;
+        if (!postId) {
+            return res.status(400).json({
+                status: 'Failed',
+                message: "Please provide a postId."
+            });
+        }
+
+        // Find post first
+        const post = await Post.findOne({ _id: postId, userId: req.user._id });
+        if (!post) {
+            return res.status(404).json({
+                status: 'Failed',
+                message: "Post not found."
+            });
+        }
+
+        // Delete image from Cloudinary
+        await cloudinary.uploader.destroy(post.storageId);
+
+        // Delete post from MongoDB
+        await Post.deleteOne({ _id: postId });
+
+        return res.status(200).json({
+            status: 'Ok',
+            message: "Post and image deleted successfully."
+        });
+    } catch (error) {
+        console.error("Error deleting post:", error);
+        return res.status(500).json({
+            status: 'Failed',
+            message: "Internal Server Error."
+        });
+    }
+});
+
 export default router;

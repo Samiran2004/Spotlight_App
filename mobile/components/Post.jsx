@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { Alert, Text, TouchableOpacity, View } from 'react-native';
 import { styles } from '../styles/feed.styles';
-import { Link } from 'expo-router'
+import { Link, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 import { useState } from 'react';
@@ -95,6 +95,40 @@ export default function Post({ post }) {
     }
   }
 
+  const handleDeletePost = async () => {
+    try {
+      const response = await fetch("http://192.168.1.7:8000/api/post/delete", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          postId: post._id
+        })
+      });
+
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        console.error("Invalid JSON response:", text);
+        throw new Error("Server did not return valid JSON.");
+      }
+
+      if (!response.ok) {
+        throw new Error(data.message || "Something went wrong");
+      }
+
+      Alert.alert("Success", "Post deleted successfully.");
+    } catch (error) {
+      console.log("Error in delete post:", error.message);
+      Alert.alert("Error", error.message || "Error in delete post.");
+    }
+  };
+
+
   // console.log(post.likes);
 
   return (
@@ -115,9 +149,14 @@ export default function Post({ post }) {
         </Link>
 
         {/* Show Delete button */}
-        <TouchableOpacity>
-          <Ionicons name='trash-outline' size={25} color={COLORS.white} />
-        </TouchableOpacity>
+        {user && user._id === post.userId._id ? (
+          <TouchableOpacity onPress={handleDeletePost}>
+            <Ionicons name='trash-outline' size={25} color={COLORS.white} />
+          </TouchableOpacity>
+        ) : (
+          <View />
+        )}
+
       </View>
 
       {/* Image */}
