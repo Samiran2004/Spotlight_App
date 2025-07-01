@@ -374,4 +374,33 @@ router.delete('/delete', userAuth, async (req, res) => {
     }
 });
 
+router.get('/notification', userAuth, async (req, res) => {
+    try {
+
+        const notifications = await Notification.find({ receiverId: req.user._id })
+            .sort({ createdAt: -1 })
+            .populate([
+                {
+                    path: "receiverId",
+                    select: "-password"
+                },
+                {
+                    path: "senderId",
+                    select: "-password"
+                }
+            ]);
+
+        return res.status(200).json({
+            status: 'Ok',
+            data: notifications
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            status: 'Failed',
+            message: "Internal Server Error."
+        })
+    }
+});
+
 export default router;
