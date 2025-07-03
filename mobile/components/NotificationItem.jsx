@@ -1,10 +1,14 @@
-import { View, Text, TouchableOpacity } from 'react-native'
-import React from 'react'
-import { styles } from '../styles/notifications.styles'
-import { Link } from 'expo-router'
-import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import { Image } from 'expo-image';
+import { Link } from 'expo-router';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { COLORS } from '../constants/theme';
+import { styles } from '../styles/notifications.styles';
+
+dayjs.extend(relativeTime);
+
 
 export default function NotificationItem({ notification }) {
     return (
@@ -33,7 +37,42 @@ export default function NotificationItem({ notification }) {
                         </View>
                     </TouchableOpacity>
                 </Link>
+
+                <View style={styles.notificationInfo}>
+
+                    <Link href={'/notifications'} asChild>
+                        <TouchableOpacity>
+                            <Text style={styles.username}>{notification.senderId.fullname}</Text>
+                        </TouchableOpacity>
+                    </Link>
+
+                    <Text style={{ color: "gray" }}>
+                        {notification.typeOfNotification === "follow" && "Started following you."}
+                        {notification.typeOfNotification === "like" && "Liked your post."}
+                        {notification.typeOfNotification === "comment" && (
+                            `Commented: "${notification.commentId?.content || ""}"`
+                        )}
+                    </Text>
+
+                    <Text style={{ color: "gray" }}>
+                        {
+                            dayjs(notification.createdAt).fromNow()
+                        }
+                    </Text>
+
+                </View>
             </View>
+
+            {
+                notification.postId && (
+                    <Image
+                        source={notification.postId.imageUrl}
+                        style={styles.postImage}
+                        contentFit='cover'
+                        transition={200}
+                    />
+                )
+            }
         </View>
     )
 }
