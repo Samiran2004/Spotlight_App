@@ -233,7 +233,7 @@ export default function Profile() {
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Bio</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, styles.bioInput]}
                   value={bio}
                   onChangeText={(text) => setBio(text)}
                   placeholderTextColor={COLORS.gray}
