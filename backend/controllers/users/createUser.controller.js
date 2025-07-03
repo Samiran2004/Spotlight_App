@@ -3,6 +3,7 @@ import express from 'express';
 import User from '../../models/users.models.js';
 import bcrypt from 'bcryptjs';
 import JWT from 'jsonwebtoken';
+import userAuth from '../../middlewares/userAuthMiddleware.js';
 
 const router = express.Router();
 
@@ -87,6 +88,54 @@ router.post("/login", async (req, res) => {
     return res.status(500).json({
       status: 'Failed',
       message: "Internal Server Error"
+    });
+  }
+});
+
+
+router.post("/update", userAuth, async (req, res) => {
+  try {
+    const { name, bio } = req.body;
+
+    if (!name && !bio) {
+      return res.status(400).json({
+        status: 'Failed',
+        message: "Please provide at least one field to update."
+      });
+    }
+
+    let fullname = name;
+
+    // Build update object dynamically
+    const updateFields = {};
+    if (fullname) updateFields.fullname = fullname;
+    if (bio) updateFields.bio = bio;
+
+    // Find and update the user
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: updateFields },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        status: 'Failed',
+        message: "User not found."
+      });
+    }
+
+    const user = await User.findById(req.user._id).select("-password");
+
+    return res.status(200).json({
+      status: 'Ok',
+      message: "Profile updated successfully.",
+      user: user
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 'Failed',
+      message: "Internal Server Error."
     });
   }
 });

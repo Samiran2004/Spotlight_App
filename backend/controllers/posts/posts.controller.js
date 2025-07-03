@@ -134,7 +134,8 @@ router.post('/like', userAuth, async (req, res) => {
             const newNotification = new Notification({
                 receiverId: post.userId,
                 senderId: req.user._id,
-                typeOfNotification: "like"
+                typeOfNotification: "like",
+                postId: postId
             });
             await newNotification.save();
             // console.log(newNotification)
@@ -230,7 +231,9 @@ router.post('/comment', userAuth, async (req, res) => {
             const newNotification = new Notification({
                 receiverId: post.userId,
                 senderId: req.user._id,
-                typeOfNotification: "comment"
+                typeOfNotification: "comment",
+                postId,
+                commentId: newComment._id
             });
             await newNotification.save();
         }
@@ -361,6 +364,13 @@ router.delete('/delete', userAuth, async (req, res) => {
         // Delete post from MongoDB
         await Post.deleteOne({ _id: postId });
 
+        await User.findByIdAndUpdate(
+            req.user._id,
+            { $inc: { posts: -1 } },
+            { new: true }
+        );
+
+
         return res.status(200).json({
             status: 'Ok',
             message: "Post and image deleted successfully."
@@ -387,7 +397,9 @@ router.get('/notification', userAuth, async (req, res) => {
                 {
                     path: "senderId",
                     select: "-password"
-                }
+                },
+                { path: "postId", select: "imageUrl" },
+                { path: "commentId", select: "content" }
             ]);
 
         return res.status(200).json({
@@ -402,5 +414,30 @@ router.get('/notification', userAuth, async (req, res) => {
         })
     }
 });
+
+router.get('/post_by_user', userAuth, async (req, res) => {
+    console.log("Hit /post_by_user route");
+    try {
+        const posts = await Post.find({ userId: req.user._id }).select("-storageId");
+        if (!posts) {
+            return res.status(400).json({
+                status: 'Failed',
+                message: "No Post Found."
+            });
+        }
+
+        // console.log(posts);
+
+        return res.status(200).json({
+            status: 'Ok',
+            data: posts
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: 'Failed',
+            message: "Internal Server Error."
+        })
+    }
+})
 
 export default router;

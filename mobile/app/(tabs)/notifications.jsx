@@ -40,7 +40,7 @@ export default function Notification() {
             }
 
             // console.log(JSON.parse(data.data));
-            console.log(data.data);
+            // console.log(data.data);
             setNotifications(data.data);
 
         } catch (error) {

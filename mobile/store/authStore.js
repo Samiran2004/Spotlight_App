@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
 
 export const userAuthStore = create((set) => ({
     user: null,
@@ -108,5 +109,11 @@ export const userAuthStore = create((set) => ({
         } catch (error) {
             console.log("Logout error", error.message);
         }
+    },
+
+    update: async (newUser) => {
+        await AsyncStorage.setItem('user', JSON.stringify(newUser));
+        set({ user: newUser });
     }
+
 }))
