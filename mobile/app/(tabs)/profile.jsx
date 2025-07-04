@@ -1,12 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { useEffect, useState } from 'react';
 import { Alert, FlatList, Keyboard, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import NoPostFound from '../../components/NoPostFound';
 import { COLORS } from '../../constants/theme';
 import { userAuthStore } from '../../store/authStore';
 import { styles } from '../../styles/profile.styles';
-import { useEffect, useState } from 'react';
-import { Loader } from '../../components/Loader';
-import { Image } from 'expo-image';
-import NoPostFound from '../../components/NoPostFound';
 
 export default function Profile() {
 

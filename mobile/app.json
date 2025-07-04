@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.zephyrus04.mobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -42,7 +46,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "8aeddaa8-ad91-4f9c-b9a3-acbed6068b77"
+        "projectId": "5307c243-e032-4dcd-a9cc-11a95407ade2"
       }
     }
   }

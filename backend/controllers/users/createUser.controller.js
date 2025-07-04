@@ -92,7 +92,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-
 router.post("/update", userAuth, async (req, res) => {
   try {
     const { name, bio } = req.body;

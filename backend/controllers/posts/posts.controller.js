@@ -441,7 +441,8 @@ router.get('/post_by_user', userAuth, async (req, res) => {
     }
 });
 
-router.get('post_by_userId/:id', async (req, res) => {
+router.get('/post_by_userId/:id', async (req, res) => {
+    console.log("Hit post_by_userId");
     try {
 
         const { id } = req.params;
@@ -471,8 +472,10 @@ router.get('post_by_userId/:id', async (req, res) => {
 
         return res.status(200).json({
             status: 'Ok',
-            user,
-            posts
+            data: {
+                user,
+                posts
+            }
         });
 
 
@@ -485,6 +488,7 @@ router.get('post_by_userId/:id', async (req, res) => {
 });
 
 router.post('/toggle_follow', userAuth, async (req, res) => {
+    console.log("Hit toggle_follow")
     try {
         const { followingId } = req.body;
 
@@ -533,6 +537,7 @@ router.post('/toggle_follow', userAuth, async (req, res) => {
 });
 
 router.get('/is_follow/:id', userAuth, async (req, res) => {
+    console.log("Hit is_follow");
     try {
         const { id } = req.params;
 
