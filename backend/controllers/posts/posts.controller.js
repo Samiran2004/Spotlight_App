@@ -7,6 +7,7 @@ import Like from '../../models/likes.models.js';
 import Bookmark from '../../models/bookmarks.models.js';
 import Notification from '../../models/notifications.models.js';
 import Comment from '../../models/comments.models.js';
+import Follow from '../../models/follows.models.js';
 
 const router = express.Router();
 
@@ -438,6 +439,127 @@ router.get('/post_by_user', userAuth, async (req, res) => {
             message: "Internal Server Error."
         })
     }
-})
+});
+
+router.get('post_by_userId/:id', async (req, res) => {
+    try {
+
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json({
+                status: 'Failed',
+                message: "User id not found!"
+            });
+        }
+
+        // Check is user exist or not...
+        const user = await User.findById(id).select("-password");
+        if (!user) {
+            return res.status(400).json({
+                status: 'Failed',
+                message: "User not found."
+            });
+        }
+
+        const posts = await Post.find({ userId: id });
+        if (!posts) {
+            return res.status(400).json({
+                status: 'Failed',
+                message: "Post not found."
+            })
+        }
+
+        return res.status(200).json({
+            status: 'Ok',
+            user,
+            posts
+        });
+
+
+    } catch (error) {
+        return res.status(500).json({
+            status: 'Failed',
+            message: "Internal Server Error."
+        });
+    }
+});
+
+router.post('/toggle_follow', userAuth, async (req, res) => {
+    try {
+        const { followingId } = req.body;
+
+        if (!followingId) {
+            return res.status(400).json({
+                status: 'Failed',
+                message: "Please provide required fields!"
+            });
+        }
+
+        // Check if follow relationship already exists
+        const existingFollow = await Follow.findOne({
+            followerId: req.user._id,
+            followingId
+        });
+
+        if (existingFollow) {
+            // Already following, so unfollow
+            await Follow.deleteOne({ _id: existingFollow._id });
+
+            return res.status(200).json({
+                status: 'Ok',
+                message: 'Unfollowed successfully.'
+            });
+        } else {
+            // Not following, so follow
+            const newFollow = new Follow({
+                followerId: req.user._id,
+                followingId
+            });
+            await newFollow.save();
+
+            return res.status(201).json({
+                status: 'Ok',
+                message: 'Followed successfully.',
+                data: newFollow
+            });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            status: 'Failed',
+            message: "Internal Server Error"
+        });
+    }
+});
+
+router.get('/is_follow/:id', userAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({
+                status: 'Failed',
+                message: "Please provide all required fields."
+            });
+        }
+
+        const checkIsFollow = await Follow.findOne({
+            followerId: req.user._id,
+            followingId: id
+        });
+
+        return res.status(200).json({
+            status: 'Ok',
+            isFollow: !!checkIsFollow
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            status: 'Failed',
+            message: "Internal Server Error."
+        });
+    }
+});
+
 
 export default router;
