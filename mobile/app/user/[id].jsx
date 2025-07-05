@@ -1,7 +1,7 @@
-import { View, Text, Alert, TouchableOpacity, ScrollView } from 'react-native'
+import { View, Text, Alert, TouchableOpacity, ScrollView, FlatList } from 'react-native'
 import React from 'react'
 import { useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { userAuthStore } from '../../store/authStore';
 import { styles } from '../../styles/profile.styles';
@@ -17,6 +17,9 @@ export default function UserProfileScreen() {
 
     const [userData, setUserData] = useState();
     const [isFollow, setIsFollow] = useState(false);
+    const [posts, setPosts] = useState([]);
+    // console.log(posts);
+    const rouetr = useRouter();
 
     const getUserProfile = async () => {
         try {
@@ -39,9 +42,10 @@ export default function UserProfileScreen() {
                 console.log("Error in response.");
             }
 
-            console.log(data.data.user);
+            // console.log(data.data.posts);
 
-            setUserData(data.data);
+            setUserData(data?.data);
+            setPosts(Array.isArray(data?.data?.posts) ? data.data.posts : []);
 
         } catch (error) {
             console.log("Error: ", error.message);
@@ -114,7 +118,10 @@ export default function UserProfileScreen() {
         }
     }
 
-    const handleBack = () => { };
+    const handleBack = () => {
+        if (rouetr.canGoBack()) rouetr.back();
+        else rouetr.replace("/(tabs)");
+    };
 
     useEffect(() => {
         getUserProfile();
@@ -164,13 +171,42 @@ export default function UserProfileScreen() {
                         userData?.user?.bio && <Text style={styles.bio}>{userData?.user?.bio}</Text>
                     }
 
-                    <TouchableOpacity style={styles.followButton} onPress={toggleFollow}>
-                        <Text style={[styles.followButtonText, isFollow && styles.followButtonText]}>
+                    <TouchableOpacity style={[styles.followButton, isFollow && styles.followingButton]} onPress={toggleFollow}>
+                        <Text style={[styles.followButtonText, isFollow && styles.followingButtonText]}>
                             {
                                 isFollow ? "Following" : "Follow"
                             }
                         </Text>
                     </TouchableOpacity>
+                </View>
+
+                <View style={styles.postsGrid}>
+                    {
+                        posts.length === 0 ? (
+                            <View style={styles.noPostsContainer}>
+                                <Ionicons name='image-outline' size={50} color={COLORS.gray} />
+                                <Text style={styles.noPostsText}>No Posts Yet</Text>
+                            </View>
+                        ) : (
+                            <FlatList
+                                data={posts}
+                                numColumns={3}
+                                scrollEnabled={false}
+                                keyExtractor={(item) => item._id}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity style={styles.gridItem}>
+                                        <Image
+                                            source={item.imageUrl}
+                                            style={{ width: '100%', height: 120 }}
+                                            contentFit='cover'
+                                            transition={200}
+                                            cachePolicy='memory-disk'
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            />
+                        )
+                    }
                 </View>
             </ScrollView>
         </View>

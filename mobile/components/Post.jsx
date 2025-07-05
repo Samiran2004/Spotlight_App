@@ -135,7 +135,9 @@ export default function Post({ post }) {
     <View style={styles.post}>
       {/* Post Header  */}
       <View style={styles.postHeader}>
-        <Link href={"/(tabs)/notifications"}>
+        <Link href={
+          user?._id === post?.userId._id ? "/(tabs)/profile" : `user/${post.userId._id}`
+        } asChild>
           <TouchableOpacity style={styles.postHeaderLeft}>
             <Image
               source={post.userId.profileImage}
